@@ -3,12 +3,18 @@
 This is the Alembic environment file that handles database migrations.
 """
 
+import sys
+from pathlib import Path
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
+
+# Add the backend directory to the Python path
+backend_dir = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(backend_dir))
 
 # Import the Base from our models
 from app.core.database import Base
@@ -29,8 +35,13 @@ target_metadata = Base.metadata
 
 # Import all models here to ensure they are registered with Base.metadata
 # This is critical for autogenerate to work correctly
-# TODO: Import models as they are created in future phases
-# from app.models import user, student, college, campus, business, etc.
+from app.models import (
+    User, UserRole, UserStatus,
+    Student, VerificationStatus,
+    College, CollegeStatus,
+    Campus,
+    Business, BusinessStatus, BusinessVerificationStatus, PriceLevel,
+)
 
 
 def run_migrations_offline() -> None:
