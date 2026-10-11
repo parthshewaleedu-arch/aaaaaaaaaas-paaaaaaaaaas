@@ -1,0 +1,34 @@
+﻿name: Restore Android Gradle Wrapper
+
+on:
+  workflow_dispatch:
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Regenerate Android scaffolding
+        working-directory: mobile
+        run: flutter create --platforms=android .
+
+      - name: Upload generated Android files
+        uses: actions/upload-artifact@v4
+        with:
+          name: restored-android-files
+          path: |
+            mobile/android/gradlew
+            mobile/android/gradlew.bat
+            mobile/android/gradle/wrapper/
+            mobile/android/settings.gradle
+            mobile/android/build.gradle
+            mobile/android/app/build.gradle
+          retention-days: 7
