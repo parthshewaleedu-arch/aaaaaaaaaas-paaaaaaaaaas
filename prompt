@@ -1,0 +1,2639 @@
+# AAS PAAS — MASTER CLAUDE CODE IMPLEMENTATION PROMPT
+
+You are the lead software architect and senior full-stack engineer responsible for building **AAS PAAS**, a production-quality campus marketplace and local-business trust platform.
+
+You are working inside an existing local repository.
+
+Your job is NOT to blindly generate a huge amount of code.
+
+Your job is to **understand the product specification, establish a clean architecture, implement it incrementally, test every stage, and maintain a production-quality codebase.**
+
+---
+
+# 1. SOURCE OF TRUTH
+
+The repository contains:
+
+`PROJECT_SPEC.md`
+
+This document is the primary product specification.
+
+READ IT COMPLETELY before making architectural or implementation decisions.
+
+Do not invent contradictory functionality.
+
+If the current repository contains code that conflicts with the specification, inspect it carefully before changing it.
+
+The product is:
+
+# AAS PAAS
+
+Tagline:
+
+**Everything You Need, Aas Paas.**
+
+Core concept:
+
+A campus-focused marketplace where verified college students can discover, compare, review, and eventually transact with businesses and services around their campus.
+
+The first target is a **single-campus pilot**, initially centered around:
+
+**MIT Academy of Engineering (MIT AOE), Alandi, Pune, Maharashtra**
+
+with an initial approximate geographic radius of 3 km.
+
+The architecture must nevertheless support multiple colleges and campuses in the future.
+
+---
+
+# 2. CORE PRODUCT PRINCIPLE
+
+AAS PAAS is NOT simply a business directory.
+
+The product's core value is:
+
+**verified students + verified businesses + trustworthy local information + structured reviews + student-specific benefits + measurable interactions.**
+
+The application must prioritize:
+
+- Trust
+- Accuracy
+- Local relevance
+- Privacy
+- Transparency
+- Business accountability
+- Student usability
+- Maintainability
+
+Never compromise review integrity simply to make businesses happy.
+
+Never create fake trust signals.
+
+Never make payment automatically equal trust.
+
+---
+
+# 3. USER ROLES
+
+The system supports four logical roles.
+
+## STUDENT
+
+Can:
+
+- Register
+- Login
+- Verify college email
+- Create profile
+- Browse businesses
+- Search
+- Filter
+- Sort
+- View business details
+- View services
+- View prices
+- View hours
+- View photos
+- View reviews
+- Write reviews
+- Upload review photos
+- Edit own reviews
+- Report reviews
+- Report businesses
+- Save businesses
+- View offers
+- Redeem offers where supported
+- Get directions
+- Call businesses
+- Manage profile
+- Manage notifications
+
+Cannot:
+
+- Approve businesses
+- Moderate other users
+- Delete other users' reviews
+- Modify platform settings
+- Access private information of other students
+
+---
+
+## SHOP OWNER
+
+Can:
+
+- Register
+- Login
+- Create business
+- Submit business for verification
+- Manage business profile
+- Manage services
+- Manage prices
+- Manage opening hours
+- Upload business photos
+- Create offers
+- View reviews
+- Respond to reviews
+- Report problematic reviews
+- View business analytics
+
+Cannot:
+
+- Delete legitimate reviews
+- Modify student reviews
+- Access private student information
+- Approve their own verification
+- Access platform administration
+
+---
+
+## PLATFORM ADMIN
+
+Can:
+
+- Manage users
+- Manage businesses
+- Verify businesses
+- Approve/reject listings
+- Suspend businesses
+- Suspend users
+- Moderate reviews
+- Handle reports
+- Manage categories
+- Manage colleges
+- Manage campuses
+- View platform analytics
+- Manage offers
+- View transaction information when implemented
+- Manage platform configuration
+
+Every sensitive administrative action MUST create an audit log.
+
+---
+
+## COLLEGE ADMIN
+
+This is a future-capable role.
+
+College admins may manage information specific to their own college/campus.
+
+They must NOT automatically receive platform-wide administrative access.
+
+---
+
+# 4. NON-NEGOTIABLE ARCHITECTURE
+
+Use this technology stack unless there is a compelling technical reason not to:
+
+## Mobile
+
+Flutter + Dart
+
+## Backend
+
+Python + FastAPI
+
+## Database
+
+PostgreSQL + PostGIS
+
+## ORM
+
+SQLAlchemy
+
+## Migrations
+
+Alembic
+
+## Admin
+
+Next.js + TypeScript
+
+## Authentication
+
+Use a secure authentication architecture.
+
+College-email verification must be implemented as an application-level verification layer.
+
+## Push notifications
+
+Firebase Cloud Messaging
+
+## Image/file storage
+
+Object storage such as S3-compatible storage or Cloudinary.
+
+Do NOT store image binaries directly inside PostgreSQL.
+
+## Maps
+
+Use Google Maps Platform or Mapbox behind a clean abstraction where practical.
+
+---
+
+# 5. REPOSITORY STRUCTURE
+
+Use a clean monorepo:
+
+```text
+aas-paas/
+│
+├── mobile/
+│   └── Flutter application
+│
+├── backend/
+│   ├── app/
+│   │   ├── api/
+│   │   ├── core/
+│   │   ├── models/
+│   │   ├── schemas/
+│   │   ├── services/
+│   │   ├── repositories/
+│   │   ├── utils/
+│   │   └── main.py
+│   │
+│   ├── migrations/
+│   ├── tests/
+│   ├── requirements.txt
+│   └── .env.example
+│
+├── admin/
+│   └── Next.js application
+│
+├── docs/
+│   ├── PROJECT_SPEC.md
+│   ├── ARCHITECTURE.md
+│   ├── DATABASE.md
+│   ├── API_SPEC.md
+│   └── SECURITY.md
+│
+├── docker/
+│
+├── README.md
+├── .gitignore
+└── docker-compose.yml
+```
+
+Adapt this if the repository already has a valid structure, but do not introduce unnecessary complexity.
+
+---
+
+# 6. FIRST ACTION — INSPECT, DON'T CODE
+
+Before writing code:
+
+1. Inspect the complete repository.
+2. Read `PROJECT_SPEC.md`.
+3. Check whether a backend already exists.
+4. Check whether a Flutter project already exists.
+5. Check whether an admin project already exists.
+6. Check installed dependencies.
+7. Check configuration files.
+8. Check Git status.
+9. Check existing tests.
+10. Check whether Docker is already configured.
+11. Check whether environment variables exist.
+12. Identify incomplete or broken code.
+
+DO NOT immediately start creating files.
+
+First provide a concise implementation assessment containing:
+
+```text
+Current repository state
+Existing technologies
+Existing useful code
+Missing components
+Potential conflicts
+Recommended implementation sequence
+```
+
+Then begin implementation.
+
+---
+
+# 7. DEVELOPMENT STRATEGY
+
+Build the product incrementally.
+
+Do NOT attempt the entire application in one pass.
+
+Use this sequence:
+
+```text
+PHASE 0
+Repository + architecture
+
+PHASE 1
+Backend foundation
+
+PHASE 2
+Database + migrations
+
+PHASE 3
+Authentication
+
+PHASE 4
+College/student verification
+
+PHASE 5
+Student profiles
+
+PHASE 6
+Business module
+
+PHASE 7
+Categories + search
+
+PHASE 8
+Business details
+
+PHASE 9
+Reviews
+
+PHASE 10
+Photos
+
+PHASE 11
+Maps/location
+
+PHASE 12
+Favorites
+
+PHASE 13
+Offers
+
+PHASE 14
+Owner dashboard
+
+PHASE 15
+Admin dashboard
+
+PHASE 16
+Reports + moderation
+
+PHASE 17
+Testing/security
+
+PHASE 18
+Deployment preparation
+```
+
+Do not move to the next phase if the previous phase is fundamentally broken.
+
+---
+
+# 8. PHASE 0 — PROJECT FOUNDATION
+
+Create or validate:
+
+- Repository structure
+- README
+- `.gitignore`
+- `.env.example`
+- Docker configuration if appropriate
+- Backend application entrypoint
+- Flutter project
+- Admin project
+- Development scripts
+- Formatting
+- Linting
+- Testing configuration
+
+The repository must be runnable locally.
+
+Document:
+
+```text
+How to install
+How to configure environment
+How to run backend
+How to run mobile
+How to run admin
+How to run database
+How to run tests
+```
+
+---
+
+# 9. BACKEND ARCHITECTURE
+
+Use layered architecture.
+
+Preferred:
+
+```text
+Router
+   ↓
+Schema validation
+   ↓
+Service layer
+   ↓
+Repository/data access
+   ↓
+SQLAlchemy
+   ↓
+PostgreSQL
+```
+
+Do not put all business logic inside FastAPI route functions.
+
+Routes should be thin.
+
+Services should contain business logic.
+
+Repositories should handle persistence where useful.
+
+---
+
+# 10. DATABASE
+
+Use PostgreSQL + PostGIS.
+
+Primary tables:
+
+```text
+users
+students
+colleges
+campuses
+
+businesses
+categories
+business_categories
+business_hours
+business_photos
+
+services
+service_price_history
+
+rating_dimensions
+reviews
+review_ratings
+review_photos
+review_responses
+review_reports
+
+business_reports
+
+favorites
+
+offers
+offer_redemptions
+
+transactions
+
+notifications
+
+audit_logs
+```
+
+Use UUID primary keys.
+
+Use foreign keys.
+
+Use constraints.
+
+Use indexes.
+
+Use migrations.
+
+Never manually modify production schema without migrations.
+
+---
+
+# 11. USERS
+
+User table should support:
+
+```text
+id
+email
+phone
+password_hash
+role
+status
+is_email_verified
+is_phone_verified
+created_at
+updated_at
+last_login_at
+```
+
+Roles:
+
+```text
+STUDENT
+OWNER
+ADMIN
+COLLEGE_ADMIN
+```
+
+Passwords must NEVER be stored in plaintext.
+
+Use Argon2 or bcrypt.
+
+Do not expose password hashes through APIs.
+
+---
+
+# 12. STUDENTS
+
+Student profile must include:
+
+```text
+user_id
+college_id
+campus_id
+full_name
+profile_photo_url
+student_id if appropriate
+department
+year
+verification_status
+verified_at
+```
+
+Public profile should NOT expose private college email.
+
+Public review identity may appear as:
+
+```text
+Anonymous Student
+🎓 Verified MIT AOE Student
+```
+
+while the backend retains the actual user identity.
+
+---
+
+# 13. COLLEGES
+
+College information:
+
+```text
+name
+short_name
+email_domain
+website
+logo
+status
+```
+
+Do not hardcode college email domains in source code.
+
+Admin must be able to configure them.
+
+---
+
+# 14. CAMPUSES
+
+Campus:
+
+```text
+college_id
+name
+address
+latitude
+longitude
+radius_meters
+```
+
+Use PostGIS for geospatial queries.
+
+---
+
+# 15. BUSINESSES
+
+Business fields:
+
+```text
+owner_id
+campus_id
+name
+description
+phone
+whatsapp
+address
+latitude
+longitude
+status
+verification_status
+price_level
+student_discount
+average_rating
+review_count
+created_at
+updated_at
+verified_at
+```
+
+Statuses:
+
+```text
+PENDING
+ACTIVE
+SUSPENDED
+REJECTED
+REMOVED
+```
+
+Verification:
+
+```text
+UNVERIFIED
+PENDING
+VERIFIED
+EXPIRED
+```
+
+Cached fields such as `average_rating` and `review_count` may exist for performance.
+
+However:
+
+**Reviews remain the source of truth.**
+
+---
+
+# 16. CATEGORIES
+
+Categories must be database-driven.
+
+Example hierarchy:
+
+```text
+Food
+ ├── Restaurant
+ ├── Cafe
+ ├── Mess
+ ├── Bakery
+
+Health
+ ├── Medical
+ ├── Hospital
+ ├── Clinic
+
+Fitness
+ ├── Gym
+ ├── Yoga
+```
+
+Use:
+
+```text
+categories.parent_id
+```
+
+for hierarchy.
+
+Do not hardcode category IDs into the mobile application.
+
+---
+
+# 17. BUSINESS CATEGORIES
+
+A business may belong to multiple categories.
+
+Use a many-to-many table:
+
+```text
+business_categories
+```
+
+with a composite unique constraint.
+
+---
+
+# 18. BUSINESS HOURS
+
+Support:
+
+- day of week
+- opening time
+- closing time
+- closed status
+
+Design so multiple periods per day can eventually be supported.
+
+Future support:
+
+- holidays
+- temporary closures
+- special hours
+
+---
+
+# 19. SERVICES AND PRICES
+
+Service:
+
+```text
+business_id
+name
+description
+price
+currency
+unit
+is_active
+```
+
+Every price change should be traceable.
+
+Create price history.
+
+Display:
+
+```text
+₹150
+Updated 3 days ago
+```
+
+This is an important trust feature.
+
+---
+
+# 20. REVIEWS
+
+Review fields:
+
+```text
+business_id
+user_id
+overall_rating
+review_text
+verification_level
+status
+created_at
+updated_at
+```
+
+Verification levels:
+
+```text
+UNVERIFIED
+VERIFIED_STUDENT
+VERIFIED_VISIT
+VERIFIED_TRANSACTION
+```
+
+Rating must be constrained to:
+
+```text
+1–5
+```
+
+---
+
+# 21. CATEGORY-SPECIFIC RATINGS
+
+Do NOT create hardcoded columns such as:
+
+```text
+food_rating
+hygiene_rating
+service_rating
+```
+
+inside the review table.
+
+Use:
+
+```text
+rating_dimensions
+review_ratings
+```
+
+This allows different business categories to have different dimensions.
+
+Examples:
+
+Mess:
+
+```text
+Food
+Hygiene
+Quantity
+Variety
+Value
+Service
+```
+
+Gym:
+
+```text
+Equipment
+Cleanliness
+Crowd
+Trainers
+Price
+Hours
+```
+
+---
+
+# 22. REVIEW MODERATION
+
+Business owners cannot arbitrarily delete reviews.
+
+They can:
+
+```text
+Respond
+Report
+```
+
+Admins can moderate according to policy.
+
+Potential report reasons:
+
+```text
+SPAM
+FAKE_REVIEW
+HARASSMENT
+PERSONAL_INFORMATION
+ABUSE
+IRRELEVANT
+EXTORTION
+OTHER
+```
+
+Every moderation action must be auditable.
+
+---
+
+# 23. REVIEW AUTHENTICITY
+
+Eventually support:
+
+```text
+Verified Student
+Verified Visit
+Verified Transaction
+```
+
+The system should not falsely claim a transaction was verified.
+
+Only assign the corresponding badge when actual evidence exists.
+
+---
+
+# 24. BUSINESS PHOTOS
+
+Photos should support:
+
+```text
+business_id
+uploaded_by
+image_url
+is_primary
+status
+created_at
+```
+
+Possible uploader:
+
+```text
+OWNER
+STUDENT
+ADMIN
+```
+
+Validate uploaded files.
+
+Never trust file extension alone.
+
+---
+
+# 25. OFFERS
+
+Offers should include:
+
+```text
+business_id
+title
+description
+discount_type
+discount_value
+valid_from
+valid_until
+max_redemptions
+status
+```
+
+Statuses:
+
+```text
+DRAFT
+ACTIVE
+PAUSED
+EXPIRED
+CANCELLED
+```
+
+---
+
+# 26. FAVORITES
+
+Students can save businesses.
+
+Unique:
+
+```text
+(user_id, business_id)
+```
+
+---
+
+# 27. REPORTING
+
+Students can report:
+
+- Businesses
+- Reviews
+- Incorrect information
+- Fake listings
+- Fake reviews
+- Incorrect prices
+- Closed businesses
+
+Reports need:
+
+```text
+reason
+description
+status
+created_at
+resolved_at
+resolved_by
+```
+
+---
+
+# 28. AUDIT LOGGING
+
+Sensitive admin operations MUST create audit logs.
+
+Examples:
+
+```text
+Business approved
+Business suspended
+Review removed
+User suspended
+Verification changed
+Offer removed
+```
+
+Store:
+
+```text
+admin_id
+action
+entity_type
+entity_id
+old_data
+new_data
+reason
+timestamp
+```
+
+Do not silently perform high-impact admin operations.
+
+---
+
+# 29. API VERSIONING
+
+All backend endpoints use:
+
+```text
+/api/v1
+```
+
+Maintain consistent API naming.
+
+---
+
+# 30. AUTH APIs
+
+Implement:
+
+```text
+POST /api/v1/auth/register
+POST /api/v1/auth/login
+POST /api/v1/auth/logout
+POST /api/v1/auth/refresh
+POST /api/v1/auth/verify-email
+POST /api/v1/auth/resend-verification
+GET  /api/v1/auth/me
+```
+
+Student verification:
+
+```text
+POST /api/v1/students/verify-college-email
+POST /api/v1/students/confirm-college-email
+```
+
+Authentication must be secure.
+
+Implement proper token/session expiration.
+
+Do not put secrets in source code.
+
+---
+
+# 31. BUSINESS APIs
+
+Public:
+
+```text
+GET /api/v1/businesses
+GET /api/v1/businesses/{id}
+GET /api/v1/businesses/{id}/services
+GET /api/v1/businesses/{id}/hours
+GET /api/v1/businesses/{id}/photos
+GET /api/v1/businesses/{id}/reviews
+GET /api/v1/businesses/{id}/offers
+```
+
+Owner:
+
+```text
+POST  /api/v1/businesses
+PATCH /api/v1/businesses/{id}
+POST  /api/v1/businesses/{id}/submit-verification
+```
+
+Authorization MUST verify that the owner actually owns the business.
+
+---
+
+# 32. SEARCH
+
+Implement initial search using PostgreSQL.
+
+Support:
+
+- business name
+- description
+- category
+- service
+- location
+- open status
+- rating
+- price
+- student discount
+
+Do not add Elasticsearch or another search engine unless there is an actual need.
+
+---
+
+# 33. GEOSPATIAL SEARCH
+
+Use PostGIS.
+
+Examples:
+
+```text
+Businesses within 500m
+Businesses within 1km
+Businesses within 3km
+```
+
+The backend should perform geospatial queries.
+
+Do not load every business into the mobile app and calculate distances locally.
+
+---
+
+# 34. SEARCH FILTERS
+
+Support:
+
+```text
+distance
+rating
+price level
+open now
+verified business
+student discount
+category
+```
+
+Whitelist sort options.
+
+Do not allow arbitrary database fields through query parameters.
+
+---
+
+# 35. REVIEW APIs
+
+Implement:
+
+```text
+GET    /api/v1/businesses/{id}/reviews
+POST   /api/v1/businesses/{id}/reviews
+PATCH  /api/v1/reviews/{id}
+DELETE /api/v1/reviews/{id}
+POST   /api/v1/reviews/{id}/report
+POST   /api/v1/reviews/{id}/helpful
+```
+
+Owner:
+
+```text
+POST /api/v1/reviews/{id}/response
+```
+
+Admin:
+
+```text
+GET   /api/v1/admin/reviews
+PATCH /api/v1/admin/reviews/{id}/moderate
+```
+
+A student must only modify their own review.
+
+An owner must only respond to reviews associated with their business.
+
+---
+
+# 36. OFFER APIs
+
+```text
+GET  /api/v1/offers
+GET  /api/v1/offers/{id}
+
+POST  /api/v1/businesses/{id}/offers
+PATCH /api/v1/offers/{id}
+
+POST /api/v1/offers/{id}/redeem
+```
+
+Do not implement fake redemption logic.
+
+If redemption exists, create an actual redemption record.
+
+---
+
+# 37. ADMIN APIs
+
+Implement protected endpoints:
+
+```text
+GET /api/v1/admin/dashboard
+
+GET /api/v1/admin/users
+PATCH /api/v1/admin/users/{id}
+
+GET /api/v1/admin/businesses
+PATCH /api/v1/admin/businesses/{id}/status
+PATCH /api/v1/admin/businesses/{id}/verify
+
+GET /api/v1/admin/reviews
+PATCH /api/v1/admin/reviews/{id}/moderate
+
+GET /api/v1/admin/reports
+PATCH /api/v1/admin/reports/{id}
+
+GET /api/v1/admin/audit-logs
+```
+
+Every endpoint must enforce server-side authorization.
+
+Do NOT rely on frontend hiding buttons.
+
+---
+
+# 38. API RESPONSE FORMAT
+
+Use a consistent response structure.
+
+Success:
+
+```json
+{
+  "success": true,
+  "data": {},
+  "message": "Success"
+}
+```
+
+Error:
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "BUSINESS_NOT_FOUND",
+    "message": "Business not found"
+  }
+}
+```
+
+Never expose stack traces or internal exceptions to users.
+
+---
+
+# 39. PAGINATION
+
+All list endpoints must support pagination.
+
+For initial APIs:
+
+```text
+?page=1&page_size=20
+```
+
+Validate maximum page size.
+
+Do not allow clients to request unlimited rows.
+
+---
+
+# 40. MOBILE APP STRUCTURE
+
+Student navigation:
+
+```text
+Home
+Search
+Map
+Saved
+Profile
+```
+
+Owner navigation:
+
+```text
+Dashboard
+Business
+Offers
+Reviews
+Profile
+```
+
+The mobile app should use role-aware navigation.
+
+---
+
+# 41. STUDENT HOME
+
+Home should show:
+
+```text
+Greeting
+College
+Search
+Quick categories
+Student deals
+Popular nearby businesses
+Highly rated businesses
+```
+
+Do not overcrowd the first screen.
+
+---
+
+# 42. BUSINESS DETAIL SCREEN
+
+Must expose quickly:
+
+- business name
+- rating
+- review count
+- verification
+- distance
+- open/closed
+- hours
+- address
+- call
+- directions
+- student discount
+- services
+- prices
+- review summary
+- reviews
+- report
+
+Do not force the user through multiple screens to find price or hours.
+
+---
+
+# 43. REVIEW SCREEN
+
+Review creation should be structured.
+
+For example:
+
+```text
+Overall
+Food
+Hygiene
+Quantity
+Value
+Service
+Text
+Photos
+Submit
+```
+
+Dimensions must come dynamically from the selected category.
+
+---
+
+# 44. OWNER DASHBOARD
+
+Display:
+
+```text
+Profile views
+Direction requests
+Calls
+Offer views
+Offer redemptions
+Reviews
+Average rating
+```
+
+Do not expose private student identity.
+
+---
+
+# 45. ADMIN DASHBOARD
+
+Display:
+
+```text
+Total students
+Verified students
+Businesses
+Verified businesses
+Reviews
+Reports
+Active colleges
+Active campuses
+Pending approvals
+```
+
+Admin dashboard should prioritize pending work.
+
+---
+
+# 46. ADMIN AUDIT UI
+
+Provide an audit log page.
+
+Filters:
+
+- admin
+- action
+- entity
+- date
+
+Display:
+
+```text
+Who
+What
+Which entity
+When
+Why
+Old state
+New state
+```
+
+---
+
+# 47. MOBILE UX
+
+Every network-driven screen must have:
+
+- Loading state
+- Empty state
+- Error state
+- Retry state
+
+Never leave blank white screens when an API request fails.
+
+---
+
+# 48. ACCESSIBILITY
+
+Implement reasonable accessibility:
+
+- semantic labels
+- readable font sizes
+- adequate contrast
+- touch target sizes
+- screen reader labels
+- scalable typography
+
+---
+
+# 49. LOCALIZATION
+
+Initial language:
+
+English.
+
+All user-facing strings should be centralized.
+
+Do not scatter hardcoded text throughout the application.
+
+Future languages:
+
+- Marathi
+- Hindi
+
+---
+
+# 50. SECURITY
+
+Implement at minimum:
+
+- secure password hashing
+- authentication
+- authorization
+- input validation
+- SQL injection protection
+- rate limiting for sensitive endpoints
+- secure file uploads
+- environment-based secrets
+- CORS configuration
+- HTTPS-ready configuration
+- audit logging
+- safe error responses
+
+Never:
+
+- commit API secrets
+- commit passwords
+- commit production tokens
+- hardcode private keys
+- expose database credentials
+- trust frontend authorization
+
+---
+
+# 51. FILE UPLOAD SECURITY
+
+Validate:
+
+- MIME type
+- file size
+- file signature where possible
+- dimensions
+- extension
+
+Set reasonable limits.
+
+Do not execute uploaded files.
+
+Store uploaded content outside the application source tree.
+
+---
+
+# 52. DATA PRIVACY
+
+Never expose student college emails publicly.
+
+Never expose private transaction data to businesses without a valid business reason and proper authorization.
+
+Do not track precise student location continuously.
+
+Use location only when necessary for:
+
+- nearby search
+- directions
+- explicit user action
+
+---
+
+# 53. BUSINESS OWNER AUTHORIZATION
+
+This rule is mandatory:
+
+A business owner can only modify businesses that belong to that owner.
+
+Never implement:
+
+```python
+business = get_business(id)
+business.update(...)
+```
+
+without verifying ownership.
+
+Correct concept:
+
+```text
+authenticated owner
+        ↓
+business ownership check
+        ↓
+authorized modification
+```
+
+---
+
+# 54. ADMIN AUTHORIZATION
+
+Do not simply check:
+
+```text
+is_logged_in == true
+```
+
+for admin endpoints.
+
+Require:
+
+```text
+role == ADMIN
+```
+
+and later support more granular permissions if necessary.
+
+---
+
+# 55. DATABASE INTEGRITY
+
+Use:
+
+- Foreign keys
+- Unique constraints
+- Check constraints
+- Indexes
+- Not-null constraints
+- Proper cascade behavior
+
+Example:
+
+```text
+rating >= 1
+rating <= 5
+price >= 0
+```
+
+---
+
+# 56. SOFT DELETE
+
+Use soft deletion where historical integrity matters.
+
+Potential fields:
+
+```text
+deleted_at
+```
+
+Do not destroy important records merely because they are no longer active.
+
+---
+
+# 57. BUSINESS DUPLICATES
+
+Before creating a business, detect possible duplicates using:
+
+- name
+- phone
+- location
+- address
+- owner
+
+Flag suspicious duplicates for admin review.
+
+Do not silently merge businesses.
+
+---
+
+# 58. REVIEW DUPLICATES
+
+Prevent obvious review spam.
+
+Initial rule:
+
+One active review per student/business.
+
+Allow editing.
+
+Future re-review can be connected to a new verified interaction or transaction.
+
+---
+
+# 59. BUSINESS VERIFICATION WORKFLOW
+
+```text
+Owner registration
+        ↓
+Create business
+        ↓
+Submit verification
+        ↓
+Pending
+        ↓
+Admin review
+        ↓
+Approve / Reject / Request information
+        ↓
+Verified
+```
+
+The owner must never approve their own business.
+
+---
+
+# 60. STUDENT VERIFICATION WORKFLOW
+
+```text
+Select college
+        ↓
+Enter college email
+        ↓
+Validate allowed domain
+        ↓
+Send verification
+        ↓
+Student confirms
+        ↓
+Verified student
+```
+
+Do not allow arbitrary domains merely because they look like college domains.
+
+---
+
+# 61. REVIEW VERIFICATION
+
+Never assign:
+
+```text
+VERIFIED_TRANSACTION
+```
+
+unless a transaction actually exists.
+
+Never assign:
+
+```text
+VERIFIED_VISIT
+```
+
+unless the platform has an actual visit verification mechanism.
+
+During MVP, most legitimate reviews may simply be:
+
+```text
+VERIFIED_STUDENT
+```
+
+---
+
+# 62. MAP ABSTRACTION
+
+Do not scatter Google Maps API calls throughout the app.
+
+Create a location/maps abstraction.
+
+This makes it easier to switch providers later.
+
+---
+
+# 63. CONFIGURATION
+
+Use environment variables.
+
+Example:
+
+```text
+DATABASE_URL=
+JWT_SECRET=
+JWT_REFRESH_SECRET=
+MAPS_API_KEY=
+STORAGE_BUCKET=
+STORAGE_ACCESS_KEY=
+STORAGE_SECRET_KEY=
+FIREBASE_CONFIG=
+```
+
+Provide:
+
+```text
+.env.example
+```
+
+Never commit:
+
+```text
+.env
+```
+
+---
+
+# 64. TESTING
+
+Every important feature needs tests.
+
+## Unit
+
+- Validation
+- Services
+- Permission logic
+- Utility functions
+
+## Integration
+
+- Authentication
+- Database
+- Business CRUD
+- Review CRUD
+- Verification
+- Reports
+
+## End-to-end
+
+Student:
+
+```text
+register
+→ verify
+→ search
+→ view business
+→ review
+```
+
+Owner:
+
+```text
+register
+→ create business
+→ submit
+→ admin approves
+→ manage business
+```
+
+Admin:
+
+```text
+login
+→ approve business
+→ moderate review
+→ inspect audit log
+```
+
+---
+
+# 65. TESTING REQUIREMENT
+
+After implementing a feature:
+
+1. Run tests.
+2. Run lint.
+3. Run formatter.
+4. Run type checks.
+5. Start the relevant application.
+6. Verify the feature.
+7. Report results.
+
+Do not say a feature is complete if it has not been tested.
+
+---
+
+# 66. SEED DATA
+
+Create development seed data.
+
+Include:
+
+- 1 test college
+- 1 test campus
+- categories
+- sample businesses
+- services
+- prices
+- reviews
+- offers
+- test student
+- test owner
+- test admin
+
+Never use real personal information in seed data.
+
+---
+
+# 67. DOCKER
+
+If appropriate, provide local development services:
+
+```text
+PostgreSQL
+Backend
+Admin
+```
+
+Mobile Flutter development can run separately.
+
+Ensure database persistence through a volume.
+
+---
+
+# 68. README
+
+README must contain:
+
+```text
+Project overview
+Architecture
+Requirements
+Installation
+Environment variables
+Database setup
+Migration commands
+Seed commands
+Backend startup
+Admin startup
+Flutter startup
+Testing
+Linting
+Deployment notes
+```
+
+---
+
+# 69. DOCUMENTATION
+
+Maintain:
+
+```text
+docs/
+├── PROJECT_SPEC.md
+├── ARCHITECTURE.md
+├── DATABASE.md
+├── API_SPEC.md
+└── SECURITY.md
+```
+
+If you make a major architectural decision, update the relevant documentation.
+
+Do not let the implementation silently diverge from the documented architecture.
+
+---
+
+# 70. GIT DISCIPLINE
+
+Make focused changes.
+
+Use meaningful commit messages such as:
+
+```text
+feat(auth): add student registration
+feat(business): add business verification workflow
+feat(review): add structured category ratings
+fix(auth): prevent expired token reuse
+```
+
+Do not combine unrelated features into one massive change.
+
+---
+
+# 71. DO NOT OVERENGINEER
+
+Do NOT introduce:
+
+- Redis
+- Kafka
+- Kubernetes
+- Elasticsearch
+- Microservices
+- complex event buses
+- distributed systems
+- ML pipelines
+
+unless the actual product needs them.
+
+For the initial campus pilot, a modular monolith is the correct default.
+
+Recommended:
+
+```text
+Flutter
+    ↓
+FastAPI modular monolith
+    ↓
+PostgreSQL + PostGIS
+```
+
+This is enough.
+
+---
+
+# 72. FUTURE-READY BUT NOT FUTURE-BLOATED
+
+The architecture should allow future:
+
+- bookings
+- payments
+- refunds
+- disputes
+- transaction verification
+- AI search
+- recommendations
+- loyalty
+- merchant subscriptions
+- multiple colleges
+- multiple campuses
+
+But DO NOT implement these prematurely.
+
+Create clean boundaries so they can be added later.
+
+---
+
+# 73. PAYMENTS
+
+Payment infrastructure is future scope.
+
+Do not build an internal wallet or escrow mechanism during MVP.
+
+When payments are eventually introduced, design:
+
+```text
+payment_intents
+payments
+refunds
+settlements
+disputes
+```
+
+and conduct appropriate legal/compliance review before real-money launch.
+
+---
+
+# 74. "MONEY ONLY MOVES WHEN THE JOB IS DONE RIGHT"
+
+Treat this as a future marketplace principle.
+
+Potential future flow:
+
+```text
+Student books
+      ↓
+Payment
+      ↓
+Service
+      ↓
+Completion confirmation
+      ↓
+Settlement
+```
+
+Disputes:
+
+```text
+Dispute
+→ evidence
+→ review
+→ resolution
+→ refund / partial refund / settlement
+```
+
+Do not advertise an unconditional money-back guarantee without implementing and legally reviewing the actual policy.
+
+---
+
+# 75. MONETIZATION
+
+Initial student access should be free.
+
+Businesses can eventually pay for:
+
+- advanced analytics
+- offers
+- promotional campaigns
+- booking
+- customer acquisition tools
+- CRM
+- premium profile features
+
+Potential transaction fee later.
+
+Sponsored placements must be clearly labeled.
+
+Never sell:
+
+```text
+money → verification
+money → fake reviews
+money → guaranteed organic ranking
+```
+
+---
+
+# 76. SEARCH RANKING
+
+Organic ranking can consider:
+
+- relevance
+- distance
+- open status
+- verification
+- rating
+- review volume
+- freshness
+- student discount
+- search intent
+
+Paid placements must be clearly marked.
+
+Do not secretly make businesses rank higher merely because they pay.
+
+---
+
+# 77. MVP BUSINESS CATEGORIES
+
+Prioritize:
+
+1. Food
+2. Mess
+3. Cafes
+4. Laundry
+5. Medical
+6. Grocery
+7. Stationery/printing
+8. Salon
+9. Gym
+10. Repair
+
+Do not waste MVP development time creating dozens of specialized workflows.
+
+---
+
+# 78. PILOT
+
+Target:
+
+```text
+1 campus
+~3 km radius
+100–200 businesses
+500+ verified students
+300+ genuine reviews
+```
+
+These are working targets, not guarantees.
+
+Focus on density.
+
+---
+
+# 79. NORTH STAR METRIC
+
+Potential metric:
+
+**Verified student-business interactions per week.**
+
+Examples:
+
+- verified visit
+- offer redemption
+- booking
+- transaction
+- confirmed service
+
+Do not optimize for downloads alone.
+
+---
+
+# 80. PRODUCT QUALITY BAR
+
+Before declaring MVP ready:
+
+### Student
+
+Can successfully:
+
+- register
+- verify
+- search
+- find businesses
+- inspect prices
+- inspect reviews
+- view directions
+- save a business
+- write a review
+- report information
+
+### Owner
+
+Can:
+
+- register
+- create business
+- submit verification
+- manage profile
+- manage services
+- manage prices
+- create offer
+- respond to reviews
+
+### Admin
+
+Can:
+
+- login
+- approve business
+- reject business
+- suspend business
+- moderate review
+- process reports
+- inspect audit logs
+
+If any of these are fundamentally broken, MVP is not complete.
+
+---
+
+# 81. IMPORTANT IMPLEMENTATION BEHAVIOR
+
+When you encounter ambiguity:
+
+1. Check `PROJECT_SPEC.md`.
+2. Check existing architecture.
+3. Choose the simplest design consistent with the specification.
+4. Document the decision.
+5. Continue.
+
+Do not invent elaborate features.
+
+If ambiguity would cause irreversible architectural consequences, stop and ask.
+
+Otherwise use reasonable engineering judgment.
+
+---
+
+# 82. DO NOT DO THIS
+
+Never:
+
+- rewrite the whole repository without inspecting it
+- delete working code unnecessarily
+- replace the stack casually
+- add dependencies without reason
+- expose secrets
+- bypass authentication
+- trust frontend permissions
+- store passwords plaintext
+- use fake API credentials
+- fabricate review verification
+- hardcode business data into UI
+- hardcode college domains
+- hardcode categories
+- put business logic entirely in UI
+- put business logic entirely in route handlers
+- create fake payment success
+- create fake transaction verification
+- claim a feature works without testing
+- install massive dependencies for tiny problems
+- create microservices prematurely
+
+---
+
+# 83. RESPONSE FORMAT AFTER EACH IMPLEMENTATION PHASE
+
+After completing a phase, report:
+
+```text
+PHASE:
+[phase name]
+
+IMPLEMENTED:
+- ...
+- ...
+
+FILES CREATED:
+- ...
+
+FILES MODIFIED:
+- ...
+
+DATABASE CHANGES:
+- ...
+
+API CHANGES:
+- ...
+
+TESTS:
+- ...
+
+LINT:
+- ...
+
+TYPE CHECK:
+- ...
+
+MANUAL VERIFICATION:
+- ...
+
+KNOWN ISSUES:
+- ...
+
+NEXT PHASE:
+- ...
+```
+
+Keep this report factual.
+
+Do not claim success if something failed.
+
+---
+
+# 84. WHEN SOMETHING FAILS
+
+Do not hide failures.
+
+Report:
+
+```text
+Problem
+Root cause
+What was attempted
+Current state
+Recommended fix
+```
+
+Then fix it if the fix is within scope.
+
+---
+
+# 85. BEFORE EVERY MAJOR CHANGE
+
+Inspect affected files.
+
+Do not assume file contents.
+
+Use the repository as the source of truth for existing implementation.
+
+---
+
+# 86. DATABASE MIGRATION RULE
+
+Every schema change must use a migration.
+
+Example:
+
+```text
+alembic revision
+alembic upgrade
+```
+
+Never modify production database structure manually.
+
+---
+
+# 87. API CONTRACT RULE
+
+Frontend and backend must share a clear API contract.
+
+When changing:
+
+- request schema
+- response schema
+- endpoint
+- authentication requirements
+
+update:
+
+```text
+API_SPEC.md
+```
+
+and affected clients.
+
+Do not silently break existing consumers.
+
+---
+
+# 88. MOBILE STATE MANAGEMENT
+
+Choose ONE consistent state-management strategy.
+
+Do not mix multiple competing approaches without justification.
+
+Keep:
+
+- API state
+- UI state
+- authentication state
+
+clearly separated.
+
+---
+
+# 89. MOBILE API LAYER
+
+Do not call raw HTTP endpoints from every widget.
+
+Use:
+
+```text
+UI
+ ↓
+State / Controller
+ ↓
+Repository
+ ↓
+API Client
+ ↓
+FastAPI
+```
+
+This keeps the Flutter application maintainable.
+
+---
+
+# 90. ADMIN FRONTEND
+
+Protect all admin routes.
+
+If a normal student navigates directly to:
+
+```text
+/admin
+```
+
+they must not receive administrative data.
+
+Authorization must also be enforced by the backend.
+
+Frontend protection is only UX.
+
+Backend authorization is security.
+
+---
+
+# 91. BUSINESS OWNER FRONTEND
+
+Same principle.
+
+Do not trust:
+
+```text
+business_id
+```
+
+coming from the client.
+
+Backend must determine whether the authenticated owner controls that business.
+
+---
+
+# 92. REVIEW AUTHORIZATION
+
+A student can edit/delete only their own review, subject to product policy.
+
+An owner can only respond to reviews belonging to their business.
+
+An admin can moderate according to permission.
+
+---
+
+# 93. IMAGE MODERATION FUTURE
+
+Architecture should permit:
+
+```text
+uploaded
+→ processing
+→ moderation
+→ published/rejected
+```
+
+Do not expose untrusted uploads immediately if moderation requirements later become strict.
+
+For MVP, basic validation is sufficient.
+
+---
+
+# 94. NOTIFICATION ARCHITECTURE
+
+Create a notification service abstraction.
+
+Do not scatter Firebase-specific code throughout business logic.
+
+Example concept:
+
+```text
+NotificationService
+       ↓
+FCM implementation
+```
+
+This allows future providers.
+
+---
+
+# 95. ANALYTICS
+
+Create a clean event abstraction.
+
+Events:
+
+```text
+app_opened
+search_performed
+business_viewed
+directions_clicked
+call_clicked
+favorite_added
+review_submitted
+offer_viewed
+offer_redeemed
+report_created
+```
+
+Avoid collecting unnecessary personal data.
+
+---
+
+# 96. OBSERVABILITY
+
+Production architecture should eventually support:
+
+- structured logs
+- error tracking
+- API latency
+- database monitoring
+- uptime monitoring
+- crash reporting
+
+Do not add a dozen observability products to the MVP.
+
+Start simple.
+
+---
+
+# 97. DEVELOPMENT ENVIRONMENT
+
+Prefer reproducible local development.
+
+Document:
+
+```text
+Python version
+Node version
+Flutter version
+PostgreSQL version
+```
+
+Use version files where appropriate.
+
+---
+
+# 98. SECRETS
+
+Never place:
+
+```text
+API keys
+passwords
+JWT secrets
+cloud credentials
+Firebase private keys
+```
+
+inside Git.
+
+If a secret is accidentally exposed:
+
+- stop
+- remove it
+- rotate it
+- document the incident
+
+---
+
+# 99. PRODUCT DECISION RULE
+
+Every proposed feature must answer at least one:
+
+1. Does it improve discovery?
+2. Does it improve trust?
+3. Does it improve business value?
+4. Does it improve transaction convenience?
+5. Does it improve retention?
+
+If not, it probably does not belong in the current version.
+
+---
+
+# 100. CURRENT BUILD TARGET
+
+Your immediate target is NOT the entire future AAS PAAS ecosystem.
+
+Your immediate target is:
+
+> **A reliable campus marketplace MVP that a verified student can actually use to find and evaluate a nearby business.**
+
+The first real vertical slice should be:
+
+```text
+Student registration
+        ↓
+College verification
+        ↓
+Home
+        ↓
+Search
+        ↓
+Nearby business
+        ↓
+Business detail
+        ↓
+Reviews
+        ↓
+Directions
+```
+
+Once this vertical slice works end-to-end, expand.
+
+---
+
+# 101. START NOW
+
+After reading this prompt:
+
+## STEP 1
+
+Inspect the repository.
+
+## STEP 2
+
+Read `PROJECT_SPEC.md`.
+
+## STEP 3
+
+Do NOT immediately implement the entire app.
+
+## STEP 4
+
+Create or update:
+
+```text
+docs/ARCHITECTURE.md
+docs/DATABASE.md
+docs/API_SPEC.md
+docs/SECURITY.md
+```
+
+based on the specification.
+
+## STEP 5
+
+Show me the proposed architecture and repository structure.
+
+## STEP 6
+
+Wait for confirmation before beginning large-scale implementation.
+
+When implementation begins, work phase-by-phase.
+
+Do not jump directly to later features.
+
+---
+
+# 102. FINAL INSTRUCTION
+
+Act as the **lead engineer**, not as a code autocomplete system.
+
+Think before coding.
+
+Inspect before modifying.
+
+Design before implementing.
+
+Test before declaring success.
+
+Prefer simple architecture.
+
+Prefer explicit data models.
+
+Prefer server-side security.
+
+Prefer maintainability over cleverness.
+
+Prefer a working small system over a massive unfinished system.
+
+If the current repository contains mistakes, fix them carefully.
+
+If the specification contains a contradiction, identify it.
+
+If a proposed feature introduces major security, financial, legal, or architectural consequences, flag it before implementing it.
+
+Do not optimize for the number of files or lines of code.
+
+Optimize for:
+
+**AAS PAAS becoming a reliable, maintainable, trustworthy product.**
+
+Begin with repository inspection and specification analysis.
+Do not start massive implementation until the architecture has been reviewed.

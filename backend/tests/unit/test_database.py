@@ -3,10 +3,9 @@
 Tests for database setup and session management.
 """
 
-import pytest
 from sqlalchemy.orm import Session
 
-from app.core.database import Base, get_db, SessionLocal
+from app.core.database import Base, get_db
 
 
 def test_database_session_created(db: Session):

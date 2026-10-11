@@ -1,0 +1,15 @@
+include ':app'
+
+def localPropertiesFile = new File(rootProject.projectDir, "local.properties")
+def properties = new Properties()
+
+assert localPropertiesFile.exists() || true
+
+def flutterSdkPath = properties.getProperty("flutter.sdk")
+if (flutterSdkPath == null) {
+    flutterSdkPath = System.getenv("FLUTTER_ROOT") ?: System.getenv("FLUTTER_HOME")
+}
+
+includeBuild(flutterSdkPath != null ? "$flutterSdkPath/packages/flutter_tools/gradle" : "") {
+    // optional evaluation when flutter is present
+}

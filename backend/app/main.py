@@ -42,16 +42,23 @@ if settings.is_production:
 # Security Headers Middleware
 @app.middleware("http")
 async def add_security_headers(request, call_next):
-    """Add security headers to all responses."""
+    """Add defense-in-depth security headers to all responses."""
     response = await call_next(request)
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers[
+        "Permissions-Policy"
+    ] = "geolocation=(self), camera=(), microphone=()"
+    response.headers[
+        "Content-Security-Policy"
+    ] = "default-src 'self'; frame-ancestors 'none';"
 
     if settings.is_production:
-        response.headers["Strict-Transport-Security"] = (
-            "max-age=31536000; includeSubDomains"
-        )
+        response.headers[
+            "Strict-Transport-Security"
+        ] = "max-age=31536000; includeSubDomains"
 
     return response
 
@@ -149,7 +156,65 @@ async def shutdown_event():
     print(f"Shutting down {settings.PROJECT_NAME}")
 
 
-# TODO: Register API routers in future phases
-# from app.api.v1 import auth, students, businesses, reviews
-# app.include_router(auth.router, prefix=settings.API_V1_PREFIX, tags=["auth"])
-# app.include_router(students.router, prefix=settings.API_V1_PREFIX, tags=["students"])
+# Include routers
+from app.api.v1.endpoints import (
+    admin,
+    auth,
+    businesses,
+    campuses,
+    categories,
+    maps,
+    notifications,
+    offers,
+    owner,
+    reviews,
+    services,
+    students,
+)
+
+app.include_router(auth.router, prefix=f"{settings.API_V1_PREFIX}/auth", tags=["auth"])
+app.include_router(
+    admin.router, prefix=f"{settings.API_V1_PREFIX}/admin", tags=["admin"]
+)
+app.include_router(
+    owner.router, prefix=f"{settings.API_V1_PREFIX}/owner", tags=["owner"]
+)
+app.include_router(
+    notifications.router,
+    prefix=f"{settings.API_V1_PREFIX}/notifications",
+    tags=["notifications"],
+)
+app.include_router(
+    students.router, prefix=f"{settings.API_V1_PREFIX}/students", tags=["students"]
+)
+app.include_router(
+    businesses.router,
+    prefix=f"{settings.API_V1_PREFIX}/businesses",
+    tags=["businesses"],
+)
+app.include_router(
+    categories.router,
+    prefix=f"{settings.API_V1_PREFIX}/categories",
+    tags=["categories"],
+)
+app.include_router(
+    services.router, prefix=f"{settings.API_V1_PREFIX}/services", tags=["services"]
+)
+app.include_router(
+    reviews.router, prefix=f"{settings.API_V1_PREFIX}/reviews", tags=["reviews"]
+)
+app.include_router(
+    offers.router, prefix=f"{settings.API_V1_PREFIX}/offers", tags=["offers"]
+)
+app.include_router(
+    campuses.router,
+    prefix=f"{settings.API_V1_PREFIX}/campuses",
+    tags=["campuses"],
+)
+app.include_router(maps.router, prefix=f"{settings.API_V1_PREFIX}/map", tags=["map"])
+
+# TODO: Include other routers in future phases
+# from app.api.v1.endpoints import users, colleges, campuses
+# app.include_router(users.router, prefix=settings.API_V1_PREFIX, tags=["users"])
+# app.include_router(colleges.router, prefix=settings.API_V1_PREFIX, tags=["colleges"])
+# app.include_router(campuses.router, prefix=settings.API_V1_PREFIX, tags=["campuses"])

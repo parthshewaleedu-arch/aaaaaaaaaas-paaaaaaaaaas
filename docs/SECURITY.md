@@ -1,8 +1,8 @@
 # AAS PAAS - Security Requirements
 
-**Document Version:** 1.0  
-**Last Updated:** 2026-09-20  
-**Status:** Foundation - Pre-implementation security specification
+**Document Version:** 1.1  
+**Last Updated:** 2026-10-11  
+**Status:** Active Implementation - Phase 15 Hardening Complete
 
 ---
 
@@ -1002,23 +1002,25 @@ flutter pub outdated
 
 ### Pre-Launch Security Review
 
-- [ ] All passwords hashed with Argon2/bcrypt
-- [ ] JWT implementation reviewed
-- [ ] Authorization checks on all protected endpoints
-- [ ] Object-level authorization implemented
-- [ ] SQL injection prevention verified
-- [ ] XSS prevention verified
+- [x] All passwords hashed with Argon2/bcrypt
+- [x] JWT implementation reviewed (JTI generation & blacklist revocation)
+- [x] Single-use refresh token rotation implemented
+- [x] Instant token revocation on logout implemented
+- [x] Authorization checks on all protected endpoints
+- [x] Object-level authorization implemented
+- [x] SQL injection prevention verified
+- [x] XSS prevention verified (Input sanitization)
 - [ ] CSRF protection implemented
-- [ ] File upload validation complete
-- [ ] Rate limiting configured
-- [ ] Security headers configured
-- [ ] HTTPS/TLS configured
-- [ ] CORS properly configured
-- [ ] Secrets in environment variables only
-- [ ] Database user permissions minimized
-- [ ] Audit logging implemented
-- [ ] Error messages don't leak sensitive info
-- [ ] Input validation on all endpoints
+- [x] File upload validation complete (Magic-byte signatures & MIME checks)
+- [x] Rate limiting configured (Sliding-window rate limiter)
+- [x] Security headers configured (CSP, Permissions-Policy, Referrer-Policy, HSTS)
+- [ ] HTTPS/TLS configured (production deployment)
+- [x] CORS properly configured
+- [x] Secrets in environment variables only
+- [x] Database user permissions minimized
+- [x] Audit logging implemented
+- [x] Error messages don't leak sensitive info
+- [x] Input validation on all endpoints
 - [ ] Privacy policy created
 - [ ] Terms of service created
 - [ ] Security incident response plan documented

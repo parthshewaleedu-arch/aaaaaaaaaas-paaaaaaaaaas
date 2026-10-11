@@ -3,7 +3,16 @@
 Student-specific profile information linked to User.
 """
 
-from sqlalchemy import CheckConstraint, Column, DateTime, Enum, ForeignKey, Integer, String, Text
+from sqlalchemy import (
+    CheckConstraint,
+    Column,
+    DateTime,
+    Enum,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 import enum
@@ -13,6 +22,7 @@ from app.models.base import BaseModel
 
 class VerificationStatus(str, enum.Enum):
     """Verification status enumeration."""
+
     UNVERIFIED = "UNVERIFIED"
     PENDING = "PENDING"
     VERIFIED = "VERIFIED"
@@ -69,6 +79,10 @@ class Student(BaseModel):
         index=True,
     )
     verified_at = Column(DateTime(timezone=True), nullable=True)
+
+    # Email verification for college email
+    email_verification_token = Column(String(255), nullable=True)
+    email_verification_expires_at = Column(DateTime(timezone=True), nullable=True)
 
     # Relationships
     user = relationship("User", backref="student", uselist=False)

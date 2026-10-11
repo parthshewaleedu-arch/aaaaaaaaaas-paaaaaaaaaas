@@ -3,7 +3,15 @@
 Represents physical campuses with geographic locations.
 """
 
-from sqlalchemy import CheckConstraint, Column, ForeignKey, Integer, Numeric, String, Text
+from sqlalchemy import (
+    CheckConstraint,
+    Column,
+    ForeignKey,
+    Integer,
+    Numeric,
+    String,
+    Text,
+)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from geoalchemy2 import Geography
@@ -47,7 +55,7 @@ class Campus(BaseModel):
 
     # PostGIS geography point (auto-populated from lat/lng via trigger)
     location = Column(
-        Geography(geometry_type='POINT', srid=4326),
+        Geography(geometry_type="POINT", srid=4326),
         nullable=True,
     )
 

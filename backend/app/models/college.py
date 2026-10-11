@@ -12,6 +12,7 @@ from app.models.base import BaseModel
 
 class CollegeStatus(str, enum.Enum):
     """College status enumeration."""
+
     ACTIVE = "ACTIVE"
     INACTIVE = "INACTIVE"
     PENDING = "PENDING"

@@ -1,6 +1,5 @@
 """Tests for Campus model"""
 
-import pytest
 from decimal import Decimal
 
 from app.models.college import College

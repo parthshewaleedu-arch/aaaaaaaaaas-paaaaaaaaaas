@@ -1,12 +1,16 @@
 """Tests for Business model"""
 
-import pytest
 from decimal import Decimal
 
 from app.models.user import User, UserRole
 from app.models.college import College
 from app.models.campus import Campus
-from app.models.business import Business, BusinessStatus, BusinessVerificationStatus, PriceLevel
+from app.models.business import (
+    Business,
+    BusinessStatus,
+    BusinessVerificationStatus,
+    PriceLevel,
+)
 
 
 def test_create_business(db):

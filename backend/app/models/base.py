@@ -52,14 +52,15 @@ class BaseModel(Base):
         Example: BusinessHour -> business_hours
         """
         import re
+
         name = cls.__name__
         # Insert underscore before capital letters
-        s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
+        s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
         # Insert underscore before capital letters in acronyms
-        name = re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
+        name = re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
         # Make plural (simple pluralization)
-        if not name.endswith('s'):
-            name += 's'
+        if not name.endswith("s"):
+            name += "s"
         return name
 
     def __repr__(self):

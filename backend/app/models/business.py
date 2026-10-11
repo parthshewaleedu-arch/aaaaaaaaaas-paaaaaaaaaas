@@ -4,8 +4,17 @@ Core business listing model.
 """
 
 from sqlalchemy import (
-    Boolean, CheckConstraint, Column, DateTime, Enum,
-    ForeignKey, Integer, Numeric, String, Text
+    Boolean,
+    CheckConstraint,
+    Column,
+    DateTime,
+    Enum,
+    ForeignKey,
+    Integer,
+    Numeric,
+    String,
+    Text,
+    Table,
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
@@ -17,6 +26,7 @@ from app.models.base import BaseModel
 
 class BusinessStatus(str, enum.Enum):
     """Business status enumeration."""
+
     PENDING = "PENDING"
     ACTIVE = "ACTIVE"
     SUSPENDED = "SUSPENDED"
@@ -26,6 +36,7 @@ class BusinessStatus(str, enum.Enum):
 
 class BusinessVerificationStatus(str, enum.Enum):
     """Business verification status enumeration."""
+
     UNVERIFIED = "UNVERIFIED"
     PENDING = "PENDING"
     VERIFIED = "VERIFIED"
@@ -34,10 +45,30 @@ class BusinessVerificationStatus(str, enum.Enum):
 
 class PriceLevel(str, enum.Enum):
     """Price level enumeration."""
+
     LEVEL_1 = "₹"
     LEVEL_2 = "₹₹"
     LEVEL_3 = "₹₹₹"
     LEVEL_4 = "₹₹₹₹"
+
+
+# Association table for business categories (many-to-many)
+business_categories = Table(
+    "business_categories",
+    BaseModel.metadata,
+    Column(
+        "business_id",
+        UUID(as_uuid=True),
+        ForeignKey("businesses.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
+    Column(
+        "category_id",
+        UUID(as_uuid=True),
+        ForeignKey("categories.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
+)
 
 
 class Business(BaseModel):
@@ -79,7 +110,7 @@ class Business(BaseModel):
     address = Column(Text, nullable=False)
     latitude = Column(Numeric(precision=10, scale=8), nullable=False)
     longitude = Column(Numeric(precision=11, scale=8), nullable=False)
-    location = Column(Geography(geometry_type='POINT', srid=4326), nullable=True)
+    location = Column(Geography(geometry_type="POINT", srid=4326), nullable=True)
 
     # Status
     status = Column(
@@ -89,7 +120,11 @@ class Business(BaseModel):
         index=True,
     )
     verification_status = Column(
-        Enum(BusinessVerificationStatus, name="business_verification_status", create_type=True),
+        Enum(
+            BusinessVerificationStatus,
+            name="business_verification_status",
+            create_type=True,
+        ),
         nullable=False,
         default=BusinessVerificationStatus.UNVERIFIED,
         index=True,
@@ -107,8 +142,10 @@ class Business(BaseModel):
     average_rating = Column(Numeric(precision=3, scale=2), nullable=True)
     review_count = Column(Integer, nullable=False, default=0)
 
-    # Verification timestamp
+    # Verification fields
     verified_at = Column(DateTime(timezone=True), nullable=True)
+    verification_notes = Column(Text, nullable=True)
+    rejection_reason = Column(Text, nullable=True)
 
     # Soft deletion
     deleted_at = Column(DateTime(timezone=True), nullable=True, index=True)
@@ -116,6 +153,56 @@ class Business(BaseModel):
     # Relationships
     owner = relationship("User", backref="businesses")
     campus = relationship("Campus", back_populates="businesses")
+    categories = relationship(
+        "Category", secondary="business_categories", back_populates="businesses"
+    )
+    hours = relationship(
+        "BusinessHours",
+        back_populates="business",
+        cascade="all, delete-orphan",
+        order_by="BusinessHours.day_of_week",
+    )
+    services = relationship(
+        "Service",
+        back_populates="business",
+        cascade="all, delete-orphan",
+        order_by="Service.name",
+    )
+    reviews = relationship(
+        "Review",
+        back_populates="business",
+        cascade="all, delete-orphan",
+        order_by="desc(Review.created_at)",
+    )
+    photos = relationship(
+        "BusinessPhoto",
+        back_populates="business",
+        cascade="all, delete-orphan",
+        order_by="desc(BusinessPhoto.created_at)",
+    )
+    favorites = relationship(
+        "Favorite",
+        back_populates="business",
+        cascade="all, delete-orphan",
+    )
+    offers = relationship(
+        "Offer",
+        back_populates="business",
+        cascade="all, delete-orphan",
+        order_by="desc(Offer.created_at)",
+    )
+    reports = relationship(
+        "BusinessReport",
+        back_populates="business",
+        cascade="all, delete-orphan",
+        order_by="desc(BusinessReport.created_at)",
+    )
+    interactions = relationship(
+        "BusinessInteraction",
+        back_populates="business",
+        cascade="all, delete-orphan",
+        order_by="desc(BusinessInteraction.created_at)",
+    )
 
     # Constraints
     __table_args__ = (

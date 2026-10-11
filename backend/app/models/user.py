@@ -12,6 +12,7 @@ from app.models.base import BaseModel
 
 class UserRole(str, enum.Enum):
     """User role enumeration."""
+
     STUDENT = "STUDENT"
     OWNER = "OWNER"
     ADMIN = "ADMIN"
@@ -20,6 +21,7 @@ class UserRole(str, enum.Enum):
 
 class UserStatus(str, enum.Enum):
     """User status enumeration."""
+
     ACTIVE = "ACTIVE"
     SUSPENDED = "SUSPENDED"
     DELETED = "DELETED"
@@ -64,9 +66,32 @@ class User(BaseModel):
     deleted_at = Column(DateTime(timezone=True), nullable=True, index=True)
 
     # Relationships
-    # student profile (one-to-one, will be defined in student.py)
-    # businesses (one-to-many, will be defined in business.py)
-    # reviews (one-to-many, will be defined in review.py)
+    reviews = relationship(
+        "Review", back_populates="user", cascade="all, delete-orphan"
+    )
+    photos = relationship(
+        "BusinessPhoto", back_populates="uploader", cascade="all, delete-orphan"
+    )
+    favorites = relationship(
+        "Favorite", back_populates="user", cascade="all, delete-orphan"
+    )
+    offer_redemptions = relationship(
+        "OfferRedemption",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        order_by="desc(OfferRedemption.redeemed_at)",
+    )
+    notifications = relationship(
+        "Notification",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        order_by="desc(Notification.created_at)",
+    )
+
+    @property
+    def is_active(self) -> bool:
+        """Return True if user status is ACTIVE."""
+        return self.status == UserStatus.ACTIVE
 
     def __repr__(self):
         return f"<User(id={self.id}, email={self.email}, role={self.role})>"

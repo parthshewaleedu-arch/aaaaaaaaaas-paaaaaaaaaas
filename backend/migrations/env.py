@@ -36,11 +36,18 @@ target_metadata = Base.metadata
 # Import all models here to ensure they are registered with Base.metadata
 # This is critical for autogenerate to work correctly
 from app.models import (
-    User, UserRole, UserStatus,
-    Student, VerificationStatus,
-    College, CollegeStatus,
+    User,
+    UserRole,
+    UserStatus,
+    Student,
+    VerificationStatus,
+    College,
+    CollegeStatus,
     Campus,
-    Business, BusinessStatus, BusinessVerificationStatus, PriceLevel,
+    Business,
+    BusinessStatus,
+    BusinessVerificationStatus,
+    PriceLevel,
 )
 
 
