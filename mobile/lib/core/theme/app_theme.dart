@@ -44,7 +44,7 @@ class AppTheme {
           fontWeight: FontWeight.w700,
         ),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: surface,
         elevation: 1.5,
         shadowColor: Colors.black.withOpacity(0.04),
