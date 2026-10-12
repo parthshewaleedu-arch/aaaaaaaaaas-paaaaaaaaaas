@@ -70,9 +70,9 @@ class _OwnerNavigationScreenState extends State<OwnerNavigationScreen> {
             label: 'My Shop',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.restaurant_menu_outlined),
-            activeIcon: Icon(Icons.restaurant_menu_rounded),
-            label: 'Menu',
+            icon: Icon(Icons.receipt_long_outlined),
+            activeIcon: Icon(Icons.receipt_long_rounded),
+            label: 'Services & Rates',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.local_offer_outlined),
@@ -90,6 +90,7 @@ class _OwnerNavigationScreenState extends State<OwnerNavigationScreen> {
   }
 
   Widget _buildOwnerAccountScreen() {
+    final email = StorageService.getCurrentUserEmail();
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
@@ -114,9 +115,7 @@ class _OwnerNavigationScreenState extends State<OwnerNavigationScreen> {
                     child: const Icon(Icons.store_mall_directory_rounded, size: 36, color: AppTheme.primary),
                   ),
                   const SizedBox(height: 12),
-                  const Text('Sharma Mess & Tiffin Service', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 2),
-                  const Text('owner@sharmamess.com', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+                  Text(email.isEmpty ? 'Campus Business Partner' : email, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),

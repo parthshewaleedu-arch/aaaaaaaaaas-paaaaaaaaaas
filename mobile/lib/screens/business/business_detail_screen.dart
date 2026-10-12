@@ -300,8 +300,57 @@ class _BusinessDetailScreenState extends State<BusinessDetailScreen> {
                           icon: const Icon(Icons.directions, size: 18),
                           label: const Text('Directions'),
                           onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Navigating ${_business.formattedDistance} from MIT AOE Campus')),
+                            final mapsUrl = _business.googleMapsUrl ?? 'https://maps.google.com/?q=${Uri.encodeComponent(_business.address)}';
+                            showDialog(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                title: const Row(
+                                  children: [
+                                    Icon(Icons.map_rounded, color: AppTheme.primary),
+                                    SizedBox(width: 8),
+                                    Text('Location & Maps', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                                  ],
+                                ),
+                                content: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(_business.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                                    const SizedBox(height: 4),
+                                    Text(_business.address, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+                                    const SizedBox(height: 10),
+                                    Row(
+                                      children: [
+                                        const Icon(Icons.near_me_rounded, size: 16, color: AppTheme.primary),
+                                        const SizedBox(width: 4),
+                                        Text('${_business.formattedDistance} from MIT AOE Campus', style: const TextStyle(fontWeight: FontWeight.w600, color: AppTheme.primary, fontSize: 13)),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 12),
+                                    const Text('Google Maps Location:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppTheme.textMuted)),
+                                    const SizedBox(height: 4),
+                                    Container(
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        color: Colors.blue.withOpacity(0.06),
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(color: Colors.blue.withOpacity(0.2)),
+                                      ),
+                                      child: SelectableText(
+                                        mapsUrl,
+                                        style: const TextStyle(fontSize: 12, color: Colors.blue, fontWeight: FontWeight.w500),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(ctx),
+                                    child: const Text('Done'),
+                                  ),
+                                ],
+                              ),
                             );
                           },
                         ),
@@ -319,21 +368,42 @@ class _BusinessDetailScreenState extends State<BusinessDetailScreen> {
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(color: AppTheme.border),
                     ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Column(
                       children: [
-                        const Icon(Icons.location_on_rounded, color: AppTheme.primary, size: 20),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(Icons.location_on_rounded, color: AppTheme.primary, size: 20),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text('Address', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                                  const SizedBox(height: 2),
+                                  Text(_business.address, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (_business.googleMapsUrl != null && _business.googleMapsUrl!.isNotEmpty) ...[
+                          const Divider(height: 18),
+                          Row(
                             children: [
-                              const Text('Address', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                              const SizedBox(height: 2),
-                              Text(_business.address, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+                              const Icon(Icons.link_rounded, size: 16, color: Colors.blue),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  _business.googleMapsUrl!,
+                                  style: const TextStyle(fontSize: 11, color: Colors.blue, decoration: TextDecoration.underline),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
                             ],
                           ),
-                        ),
+                        ],
                       ],
                     ),
                   ),

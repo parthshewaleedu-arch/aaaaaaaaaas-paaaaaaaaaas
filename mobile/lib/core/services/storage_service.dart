@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/api_constants.dart';
 
+import 'app_repository.dart';
+
 class StorageService {
   static const String _keyAccessToken = 'access_token';
   static const String _keyRefreshToken = 'refresh_token';
@@ -17,6 +19,12 @@ class StorageService {
 
   static Future<void> init() async {
     _prefs ??= await SharedPreferences.getInstance();
+    await AppRepository.init();
+  }
+
+  static String getCurrentUserEmail() {
+    final user = getUser();
+    return user?['email']?.toString() ?? '';
   }
 
   // Tokens

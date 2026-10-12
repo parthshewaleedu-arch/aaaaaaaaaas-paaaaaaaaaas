@@ -44,6 +44,7 @@ class BusinessModel {
   final List<ServiceModel> services;
   final List<String> photos;
   final String? openingHours;
+  final String? googleMapsUrl;
 
   BusinessModel({
     required this.id,
@@ -65,6 +66,7 @@ class BusinessModel {
     this.services = const [],
     this.photos = const [],
     this.openingHours,
+    this.googleMapsUrl,
   });
 
   String get formattedDistance {
@@ -111,6 +113,7 @@ class BusinessModel {
       services: services,
       photos: photos,
       openingHours: json['opening_hours_text']?.toString() ?? '10:00 AM - 10:00 PM',
+      googleMapsUrl: json['google_maps_url']?.toString() ?? json['maps_url']?.toString(),
     );
   }
 }

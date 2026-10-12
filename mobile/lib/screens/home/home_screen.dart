@@ -34,30 +34,17 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _loadData();
+    _loadDataInstantly();
   }
 
-  Future<void> _loadData() async {
-    setState(() => _isLoading = true);
+  void _loadDataInstantly() {
     _campusName = StorageService.getCampusName();
-
-    final res = await ApiService.getBusinesses(pageSize: 10, sort: 'rating');
-    if (res.success && res.data != null) {
-      final items = (res.data!['items'] as List?) ?? [];
-      final parsed = items.map((b) => BusinessModel.fromJson(b as Map<String, dynamic>)).toList();
-      _popularBusinesses = parsed;
-      _topRatedBusinesses = List.from(parsed)..sort((a, b) => b.rating.compareTo(a.rating));
-    }
-
-    // If backend is empty or offline during preview, load campus sample data
-    if (_popularBusinesses.isEmpty) {
-      _popularBusinesses = _getSampleCampusBusinesses();
-      _topRatedBusinesses = List.from(_popularBusinesses)..sort((a, b) => b.rating.compareTo(a.rating));
-    }
-
-    if (mounted) {
-      setState(() => _isLoading = false);
-    }
+    final verifiedMaps = AppRepository.getVerifiedBusinesses();
+    final parsed = verifiedMaps.map((b) => BusinessModel.fromJson(b)).toList();
+    _popularBusinesses = parsed;
+    _topRatedBusinesses = List.from(parsed)..sort((a, b) => b.rating.compareTo(a.rating));
+    _isLoading = false;
+    setState(() {});
   }
 
   List<BusinessModel> _getSampleCampusBusinesses() {
@@ -226,7 +213,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: _loadData,
+        onRefresh: () async => _loadDataInstantly(),
         color: AppTheme.primary,
         child: SingleChildScrollView(
           padding: const EdgeInsets.only(bottom: 32),

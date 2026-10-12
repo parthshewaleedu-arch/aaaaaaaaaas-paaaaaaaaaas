@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/services/app_repository.dart';
 import '../../core/theme/app_theme.dart';
 
 class AdminVerificationsScreen extends StatefulWidget {
@@ -9,50 +10,40 @@ class AdminVerificationsScreen extends StatefulWidget {
 }
 
 class _AdminVerificationsScreenState extends State<AdminVerificationsScreen> {
-  final List<Map<String, dynamic>> _pendingList = [
-    {
-      'id': 'v-1',
-      'name': 'Gajanan Mess & Dining Hall',
-      'owner': 'Gajanan Patil (+91 94220 11223)',
-      'category': 'Food & Mess',
-      'address': 'Dnyaneshwar Nagar, Alandi (450 m from MIT AOE)',
-      'docs': 'Shop Act License #MH-2024-8849',
-      'time': 'Submitted 4 hours ago',
-    },
-    {
-      'id': 'v-2',
-      'name': 'SpeedXerox & Digital Printers',
-      'owner': 'Mahesh Joshi (+91 98810 33445)',
-      'category': 'Stationery/Xerox',
-      'address': 'Main Gate Market, Alandi (150 m)',
-      'docs': 'Electricity Bill & GST Reg',
-      'time': 'Submitted yesterday',
-    },
-    {
-      'id': 'v-3',
-      'name': 'Campus Cuts Unisex Salon',
-      'owner': 'Suresh Salunkhe (+91 97654 66778)',
-      'category': 'Salon',
-      'address': 'Opp. MIT AOE Girls Hostel',
-      'docs': 'Udyam Registration Certificate',
-      'time': 'Submitted 2 days ago',
-    },
-  ];
+  List<Map<String, dynamic>> _pendingList = [];
 
-  void _handleAction(int index, bool approve) {
-    final biz = _pendingList[index];
-    setState(() => _pendingList.removeAt(index));
+  @override
+  void initState() {
+    super.initState();
+    _loadPendingList();
+  }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        backgroundColor: approve ? AppTheme.success : AppTheme.error,
-        content: Text(
-          approve
-              ? '✅ ${biz['name']} approved & verified on campus marketplace!'
-              : '❌ ${biz['name']} rejected. Notice sent to shop owner.',
+  void _loadPendingList() {
+    _pendingList = AppRepository.getPendingBusinesses();
+    setState(() {});
+  }
+
+  Future<void> _handleAction(String bizId, String bizName, bool approve) async {
+    if (approve) {
+      // Approving immediately makes it visible to all students!
+      await AppRepository.approveBusiness(bizId);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: AppTheme.success,
+          content: Text('✅ "$bizName" approved! It is now LIVE and visible to students.'),
         ),
-      ),
-    );
+      );
+    } else {
+      await AppRepository.rejectBusiness(bizId);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: AppTheme.error,
+          content: Text('❌ "$bizName" was rejected.'),
+        ),
+      );
+    }
+
+    _loadPendingList();
   }
 
   @override
@@ -61,6 +52,12 @@ class _AdminVerificationsScreenState extends State<AdminVerificationsScreen> {
       backgroundColor: AppTheme.background,
       appBar: AppBar(
         title: const Text('Pending Business Approvals'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded, color: AppTheme.primary),
+            onPressed: _loadPendingList,
+          ),
+        ],
       ),
       body: _pendingList.isEmpty
           ? Center(
@@ -78,9 +75,9 @@ class _AdminVerificationsScreenState extends State<AdminVerificationsScreen> {
                       child: const Icon(Icons.check_circle_outline, size: 54, color: AppTheme.success),
                     ),
                     const SizedBox(height: 16),
-                    const Text('Verification Queue Clear!', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                    const Text('No Pending Submissions', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                     const SizedBox(height: 6),
-                    const Text('All campus business submissions have been processed.', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+                    const Text('All campus businesses have been verified and are active.', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
                   ],
                 ),
               ),
@@ -91,6 +88,15 @@ class _AdminVerificationsScreenState extends State<AdminVerificationsScreen> {
               separatorBuilder: (_, __) => const SizedBox(height: 14),
               itemBuilder: (ctx, idx) {
                 final item = _pendingList[idx];
+                final id = item['id'] as String;
+                final name = item['name'] as String;
+                final cat = item['category_name'] as String;
+                final fee = item['monthly_fee'] ?? 500;
+                final addr = item['address'] as String;
+                final phone = item['phone'] as String;
+                final owner = item['owner_email'] as String;
+                final mapUrl = item['google_maps_url'] ?? '';
+
                 return Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -110,26 +116,44 @@ class _AdminVerificationsScreenState extends State<AdminVerificationsScreen> {
                               color: AppTheme.primary.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(6),
                             ),
-                            child: Text(item['category'] as String, style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold, fontSize: 11)),
+                            child: Text(cat, style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold, fontSize: 11)),
                           ),
-                          Text(item['time'] as String, style: const TextStyle(fontSize: 11, color: AppTheme.textMuted)),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF59E0B).withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text('Plan: ₹$fee/mo', style: const TextStyle(color: Color(0xFFB45309), fontWeight: FontWeight.bold, fontSize: 11)),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 10),
-                      Text(item['name'] as String, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      Text(name, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 4),
-                      Text('👤 Owner: ${item['owner']}', style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+                      Text('👤 Owner: $owner ($phone)', style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
                       const SizedBox(height: 4),
-                      Text('📍 ${item['address']}', style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
-                      const SizedBox(height: 4),
-                      Text('📄 Docs: ${item['docs']}', style: const TextStyle(fontSize: 12, color: Color(0xFF0F766E), fontWeight: FontWeight.w600)),
+                      Text('📍 $addr', style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+                      if (mapUrl.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            const Icon(Icons.map, size: 14, color: AppTheme.primary),
+                            const SizedBox(width: 4),
+                            Expanded(child: Text(mapUrl, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11, color: AppTheme.primary))),
+                          ],
+                        ),
+                      ],
                       const SizedBox(height: 16),
                       Row(
                         children: [
                           Expanded(
                             child: OutlinedButton(
-                              style: OutlinedButton.styleFrom(foregroundColor: AppTheme.error, side: const BorderSide(color: AppTheme.error)),
-                              onPressed: () => _handleAction(idx, false),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: AppTheme.error,
+                                side: const BorderSide(color: AppTheme.error),
+                              ),
+                              onPressed: () => _handleAction(id, name, false),
                               child: const Text('Reject'),
                             ),
                           ),
@@ -137,8 +161,8 @@ class _AdminVerificationsScreenState extends State<AdminVerificationsScreen> {
                           Expanded(
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(backgroundColor: AppTheme.success),
-                              onPressed: () => _handleAction(idx, true),
-                              child: const Text('Approve & Verify'),
+                              onPressed: () => _handleAction(id, name, true),
+                              child: const Text('Approve & Verify (Live)'),
                             ),
                           ),
                         ],

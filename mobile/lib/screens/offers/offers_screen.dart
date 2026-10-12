@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../core/services/api_service.dart';
+import '../../core/services/app_repository.dart';
+import '../../core/services/storage_service.dart';
 import '../../core/theme/app_theme.dart';
-import '../../models/offer_model.dart';
 
 class OffersScreen extends StatefulWidget {
   const OffersScreen({super.key});
@@ -11,102 +11,59 @@ class OffersScreen extends StatefulWidget {
 }
 
 class _OffersScreenState extends State<OffersScreen> {
-  bool _isLoading = true;
-  List<OfferModel> _offers = [];
+  List<Map<String, dynamic>> _offers = [];
 
   @override
   void initState() {
     super.initState();
-    _loadOffers();
+    _loadOffersInstantly();
   }
 
-  Future<void> _loadOffers() async {
-    setState(() => _isLoading = true);
-
-    final res = await ApiService.getOffers();
-    if (res.success && res.data != null) {
-      _offers = res.data!.map((o) => OfferModel.fromJson(o as Map<String, dynamic>)).toList();
-    }
-
-    if (_offers.isEmpty) {
-      _offers = _getSampleOffers();
-    }
-
-    if (mounted) {
-      setState(() => _isLoading = false);
-    }
+  void _loadOffersInstantly() {
+    _offers = AppRepository.getAllActiveOffers();
+    setState(() {});
   }
 
-  List<OfferModel> _getSampleOffers() {
-    return [
-      OfferModel(
-        id: 'off-1',
-        title: 'Monthly Mess Subscription Discount',
-        description: 'Get ₹300 off on your first monthly mess pass by verifying MIT AOE student credentials.',
-        businessId: 'sample-1',
-        businessName: 'Sharma Mess & Tiffin Service',
-        discountText: '₹300 OFF',
-        code: 'AASPAAS-MESS300',
-        validUntil: 'Valid this month',
-      ),
-      OfferModel(
-        id: 'off-2',
-        title: 'Project Printing & Hardcover Bundle',
-        description: 'Complete final year project print bundle: 3 bound copies at student rates + free digital PDF copy.',
-        businessId: 'sample-2',
-        businessName: 'Campus Xerox & Stationery Hub',
-        discountText: '25% OFF',
-        code: 'CAMPUS-PRINT25',
-        validUntil: 'Valid during submissions',
-      ),
-      OfferModel(
-        id: 'off-3',
-        title: 'Late Night Study Combo',
-        description: 'Hot Masala Chai + Bun Maska + Wi-Fi coupon valid after 8:00 PM on presentation of student ID.',
-        businessId: 'sample-3',
-        businessName: 'Chai Shai & Cafe 24',
-        discountText: 'COMBO @ ₹49',
-        code: 'CHAI49',
-        validUntil: 'Every weekday',
-      ),
-      OfferModel(
-        id: 'off-4',
-        title: 'Semester Gym Membership Pass',
-        description: 'Unlimited access to cardio and weight room with complimentary locker storage.',
-        businessId: 'sample-5',
-        businessName: 'Iron Core Gym & Fitness',
-        discountText: '₹799/MO',
-        code: 'STUDENT-FIT',
-        validUntil: 'Semester special',
-      ),
-    ];
-  }
+  void _showClaimDialog(Map<String, dynamic> offer) {
+    final title = offer['title'] ?? 'Student Deal';
+    final bizName = offer['business_name'] ?? 'Campus Partner';
+    final code = offer['code'] ?? 'AASPAAS-DEAL';
+    final max = (offer['max_claims'] as num?)?.toInt() ?? 10;
+    final claimed = (offer['claimed_count'] as num?)?.toInt() ?? 0;
+    final isFull = claimed >= max;
 
-  void _showClaimDialog(OfferModel offer) {
+    if (isFull) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: AppTheme.error,
+          content: Text('⚠️ Sorry, all passes for this deal have been claimed!'),
+        ),
+      );
+      return;
+    }
+
+    // Claim
+    final email = StorageService.getCurrentUserEmail();
+    AppRepository.claimOffer(offer['id'], email.isEmpty ? 'student@mitaoe.ac.in' : email);
+    _loadOffersInstantly();
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
-          children: [
-            const Icon(Icons.verified, color: AppTheme.primary),
-            const SizedBox(width: 8),
-            const Text('Student Deal Pass', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          children: const [
+            Icon(Icons.verified, color: AppTheme.primary),
+            SizedBox(width: 8),
+            Text('Student Deal Claimed!', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              offer.title,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
+            Text(title, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
             const SizedBox(height: 6),
-            Text(
-              offer.businessName,
-              style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
-            ),
+            Text(bizName, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(16),
@@ -117,7 +74,7 @@ class _OffersScreenState extends State<OffersScreen> {
               ),
               child: Column(
                 children: [
-                  const Text('SHOW THIS CODE AT COUNTER', style: TextStyle(letterSpacing: 1.2, fontSize: 10, fontWeight: FontWeight.bold, color: AppTheme.textSecondary)),
+                  const Text('SHOW CODE AT SHOP COUNTER', style: TextStyle(letterSpacing: 1.2, fontSize: 10, fontWeight: FontWeight.bold, color: AppTheme.textSecondary)),
                   const SizedBox(height: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -127,9 +84,9 @@ class _OffersScreenState extends State<OffersScreen> {
                       border: Border.all(color: AppTheme.border),
                     ),
                     child: Text(
-                      offer.code ?? 'AASPAAS-DEAL',
+                      code,
                       style: const TextStyle(
-                        fontSize: 20,
+                        fontSize: 22,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 2.0,
                         color: AppTheme.primary,
@@ -137,13 +94,13 @@ class _OffersScreenState extends State<OffersScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text(offer.validUntil, style: const TextStyle(color: AppTheme.textMuted, fontSize: 11)),
+                  Text('Quota remaining: ${max - (claimed + 1)} of $max passes left', style: const TextStyle(color: AppTheme.textMuted, fontSize: 11)),
                 ],
               ),
             ),
             const SizedBox(height: 12),
             const Text(
-              '⚠️ Flash along with your College ID to verify enrolled student status.',
+              '⚠️ Flash along with your College ID card to verify enrolled student status.',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 11, color: AppTheme.textSecondary),
             ),
@@ -152,7 +109,7 @@ class _OffersScreenState extends State<OffersScreen> {
         actions: [
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Done'),
+            child: const Text('Got It'),
           ),
         ],
       ),
@@ -165,106 +122,135 @@ class _OffersScreenState extends State<OffersScreen> {
       backgroundColor: AppTheme.background,
       appBar: AppBar(
         title: const Text('Campus Deals & Offers'),
-      ),
-      body: RefreshIndicator(
-        onRefresh: _loadOffers,
-        color: AppTheme.primary,
-        child: _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : ListView.separated(
-                padding: const EdgeInsets.all(16),
-                itemCount: _offers.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 14),
-                itemBuilder: (ctx, idx) {
-                  final offer = _offers[idx];
-                  return _buildOfferCard(offer);
-                },
-              ),
-      ),
-    );
-  }
-
-  Widget _buildOfferCard(OfferModel offer) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppTheme.primary,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        offer.discountText,
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
-                      ),
-                    ),
-                    Text(
-                      offer.validUntil,
-                      style: const TextStyle(color: AppTheme.textMuted, fontSize: 11),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  offer.title,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  offer.businessName,
-                  style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w600, fontSize: 13),
-                ),
-                if (offer.description != null) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    offer.description!,
-                    style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12, height: 1.3),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          const Divider(height: 1, color: AppTheme.border),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: const [
-                    Icon(Icons.shield_outlined, size: 14, color: AppTheme.success),
-                    SizedBox(width: 4),
-                    Text('Verified Student Deal', style: TextStyle(color: AppTheme.success, fontSize: 11, fontWeight: FontWeight.w600)),
-                  ],
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size(110, 36),
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                  ),
-                  onPressed: () => _showClaimDialog(offer),
-                  child: const Text('Claim Deal', style: TextStyle(fontSize: 13)),
-                ),
-              ],
-            ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded, color: AppTheme.primary),
+            onPressed: _loadOffersInstantly,
           ),
         ],
       ),
+      body: _offers.isEmpty
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    Icon(Icons.local_offer_outlined, size: 48, color: AppTheme.textMuted),
+                    SizedBox(height: 12),
+                    Text('No Campus Deals Active', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                    SizedBox(height: 6),
+                    Text('Local shops post exclusive discounts for MIT AOE students here.', textAlign: TextAlign.center, style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+                  ],
+                ),
+              ),
+            )
+          : ListView.separated(
+              padding: const EdgeInsets.all(16),
+              itemCount: _offers.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 14),
+              itemBuilder: (ctx, idx) {
+                final offer = _offers[idx];
+                final title = offer['title'] ?? 'Student Deal';
+                final bizName = offer['business_name'] ?? 'Local Shop';
+                final discount = offer['discount_text'] ?? '15% OFF';
+                final max = (offer['max_claims'] as num?)?.toInt() ?? 10;
+                final claimed = (offer['claimed_count'] as num?)?.toInt() ?? 0;
+                final isFull = claimed >= max;
+
+                return Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppTheme.border),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: isFull ? AppTheme.textMuted : AppTheme.primary,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    discount,
+                                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: isFull ? AppTheme.error.withOpacity(0.1) : AppTheme.success.withOpacity(0.12),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    isFull ? 'Deal Quota Filled' : '$claimed of $max Claimed',
+                                    style: TextStyle(
+                                      color: isFull ? AppTheme.error : AppTheme.success,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              title,
+                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              bizName,
+                              style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w600, fontSize: 13),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              'Limited quota: Valid for the first $max students only',
+                              style: const TextStyle(color: AppTheme.textSecondary, fontSize: 11),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Divider(height: 1, color: AppTheme.border),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Row(
+                              children: [
+                                Icon(Icons.shield_outlined, size: 14, color: AppTheme.success),
+                                SizedBox(width: 4),
+                                Text('Verified Student Deal', style: TextStyle(color: AppTheme.success, fontSize: 11, fontWeight: FontWeight.w600)),
+                              ],
+                            ),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: isFull ? AppTheme.textMuted : AppTheme.primary,
+                                minimumSize: const Size(110, 36),
+                                padding: const EdgeInsets.symmetric(horizontal: 14),
+                              ),
+                              onPressed: isFull ? null : () => _showClaimDialog(offer),
+                              child: Text(isFull ? 'Sold Out' : 'Claim Pass', style: const TextStyle(fontSize: 13)),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
     );
   }
 }

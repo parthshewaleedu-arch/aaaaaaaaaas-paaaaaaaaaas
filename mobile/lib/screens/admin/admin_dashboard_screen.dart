@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../core/services/api_service.dart';
+import '../../core/services/app_repository.dart';
 import '../../core/theme/app_theme.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
@@ -11,31 +11,25 @@ class AdminDashboardScreen extends StatefulWidget {
 }
 
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
-  bool _isLoading = false;
-  int _totalStudents = 1842;
-  int _totalBusinesses = 68;
-  int _totalReviews = 892;
-  int _pendingVerifications = 3;
+  int _totalStudents = 1;
+  int _totalBusinesses = 0;
+  int _pendingVerifications = 0;
+  int _verifiedBusinesses = 0;
+  List<Map<String, dynamic>> _allBusinesses = [];
 
   @override
   void initState() {
     super.initState();
-    _fetchKpis();
+    _loadRealDataInstantly();
   }
 
-  Future<void> _fetchKpis() async {
-    setState(() => _isLoading = true);
-    final res = await ApiService.getAdminDashboard();
-    if (res.success && res.data != null) {
-      final d = res.data!['data'];
-      if (d != null) {
-        _totalStudents = d['total_students'] ?? _totalStudents;
-        _totalBusinesses = d['total_businesses'] ?? _totalBusinesses;
-        _totalReviews = d['total_reviews'] ?? _totalReviews;
-        _pendingVerifications = d['pending_verifications'] ?? _pendingVerifications;
-      }
-    }
-    if (mounted) setState(() => _isLoading = false);
+  void _loadRealDataInstantly() {
+    _totalStudents = AppRepository.getUniqueStudentsCount();
+    _allBusinesses = AppRepository.getAllBusinesses();
+    _totalBusinesses = _allBusinesses.length;
+    _pendingVerifications = AppRepository.getPendingBusinesses().length;
+    _verifiedBusinesses = AppRepository.getVerifiedBusinesses().length;
+    setState(() {});
   }
 
   @override
@@ -44,73 +38,101 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       backgroundColor: AppTheme.background,
       appBar: AppBar(
         title: const Text('Platform Administrator'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded, color: AppTheme.primary),
+            onPressed: _loadRealDataInstantly,
+          ),
+        ],
       ),
-      body: RefreshIndicator(
-        onRefresh: _fetchKpis,
-        color: AppTheme.primary,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Admin Header
-              Container(
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF1E293B), Color(0xFF334155)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(16),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Admin Header
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF1E293B), Color(0xFF334155)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('AAS PAAS CONTROL CENTER', style: TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
-                    const SizedBox(height: 6),
-                    const Text('Pilot: MIT AOE, Alandi (Pune)', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800)),
-                    const SizedBox(height: 4),
-                    const Text('Monitor campus marketplace integrity, business approvals, and dispute moderation.', style: TextStyle(color: Colors.white70, fontSize: 12)),
-                  ],
-                ),
+                borderRadius: BorderRadius.circular(16),
               ),
-
-              const SizedBox(height: 20),
-
-              const Text('Campus Health Metrics', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppTheme.textPrimary)),
-              const SizedBox(height: 12),
-
-              Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: _buildMetricTile('Verified Students', '$_totalStudents', Icons.school, AppTheme.primary),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildMetricTile('Active Businesses', '$_totalBusinesses', Icons.storefront, const Color(0xFF0EA5E9)),
-                  ),
+                  const Text('AAS PAAS CONTROL CENTER', style: TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+                  const SizedBox(height: 6),
+                  const Text('Pilot: MIT AOE, Alandi (Pune)', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800)),
+                  const SizedBox(height: 4),
+                  const Text('Real-time campus marketplace stats, business approvals, and dispute moderation.', style: TextStyle(color: Colors.white70, fontSize: 12)),
                 ],
               ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildMetricTile('Student Reviews', '$_totalReviews', Icons.rate_review, const Color(0xFFF59E0B)),
+            ),
+
+            const SizedBox(height: 20),
+
+            const Text('Live Campus Health Metrics', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppTheme.textPrimary)),
+            const SizedBox(height: 12),
+
+            Row(
+              children: [
+                Expanded(
+                  child: _buildMetricTile(
+                    'Unique Students Logged In',
+                    '$_totalStudents',
+                    Icons.school_rounded,
+                    AppTheme.primary,
+                    'Real verified accounts',
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () => widget.onNavigateTab(1),
-                      child: _buildMetricTile('Pending Approvals', '$_pendingVerifications', Icons.pending_actions, AppTheme.error),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildMetricTile(
+                    'Total Businesses Listed',
+                    '$_totalBusinesses',
+                    Icons.storefront_rounded,
+                    const Color(0xFF0EA5E9),
+                    '$_verifiedBusinesses verified live',
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildMetricTile(
+                    'Active on Marketplace',
+                    '$_verifiedBusinesses',
+                    Icons.check_circle_rounded,
+                    AppTheme.success,
+                    'Visible to students',
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => widget.onNavigateTab(1),
+                    child: _buildMetricTile(
+                      'Pending Approvals',
+                      '$_pendingVerifications',
+                      Icons.pending_actions_rounded,
+                      _pendingVerifications > 0 ? AppTheme.error : AppTheme.textSecondary,
+                      'Tap to review',
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
+            ),
 
-              const SizedBox(height: 24),
+            const SizedBox(height: 24),
 
-              // Action shortcut
+            // Pending action notice if any
+            if (_pendingVerifications > 0) ...[
               GestureDetector(
                 onTap: () => widget.onNavigateTab(1),
                 child: Container(
@@ -118,7 +140,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppTheme.border),
+                    border: Border.all(color: AppTheme.error.withOpacity(0.4)),
                   ),
                   child: Row(
                     children: [
@@ -135,9 +157,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('3 Businesses Awaiting Verification', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                            Text('$_pendingVerifications Businesses Awaiting Verification', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                             const SizedBox(height: 2),
-                            const Text('Review licenses, phone verification & physical store location', style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+                            const Text('Review categories, pricing plans & approve for student feed', style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
                           ],
                         ),
                       ),
@@ -146,14 +168,85 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   ),
                 ),
               ),
+              const SizedBox(height: 24),
             ],
-          ),
+
+            // List of ALL businesses in the platform (User Requirement!)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('All Registered Businesses', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppTheme.textPrimary)),
+                Text('Total: $_totalBusinesses', style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13, fontWeight: FontWeight.bold)),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: _allBusinesses.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 10),
+              itemBuilder: (ctx, idx) {
+                final b = _allBusinesses[idx];
+                final isApproved = b['status'] == 'VERIFIED';
+                return Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: AppTheme.border),
+                  ),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 20,
+                        backgroundColor: (isApproved ? AppTheme.success : AppTheme.secondary).withOpacity(0.12),
+                        child: Icon(
+                          isApproved ? Icons.verified : Icons.hourglass_top,
+                          color: isApproved ? AppTheme.success : const Color(0xFFB45309),
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(b['name'] ?? 'Shop', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                            const SizedBox(height: 2),
+                            Text('${b['category_name']} • Plan: ₹${b['monthly_fee'] ?? 500}/mo', style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+                            const SizedBox(height: 2),
+                            Text(b['address'] ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11, color: AppTheme.textMuted)),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: (isApproved ? AppTheme.success : AppTheme.secondary).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          isApproved ? 'LIVE' : 'PENDING',
+                          style: TextStyle(
+                            color: isApproved ? AppTheme.success : const Color(0xFFB45309),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildMetricTile(String title, String value, IconData icon, Color color) {
+  Widget _buildMetricTile(String title, String value, IconData icon, Color color, String sub) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -167,12 +260,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(title, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary, fontWeight: FontWeight.w600)),
-              Icon(icon, size: 20, color: color),
+              Flexible(child: Text(title, style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis)),
+              Icon(icon, size: 18, color: color),
             ],
           ),
           const SizedBox(height: 8),
           Text(value, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppTheme.textPrimary)),
+          const SizedBox(height: 2),
+          Text(sub, style: const TextStyle(fontSize: 10, color: AppTheme.textMuted)),
         ],
       ),
     );
