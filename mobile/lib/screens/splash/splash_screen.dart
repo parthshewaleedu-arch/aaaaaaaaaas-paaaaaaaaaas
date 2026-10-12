@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../core/services/storage_service.dart';
 import '../../core/theme/app_theme.dart';
+import '../admin/admin_navigation_screen.dart';
 import '../auth/login_screen.dart';
 import '../main_navigation_screen.dart';
+import '../owner/owner_navigation_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -20,14 +22,33 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _checkInitialState() async {
     await StorageService.init();
-    await Future.delayed(const Duration(milliseconds: 1200));
+    await Future.delayed(const Duration(milliseconds: 1000));
 
     if (!mounted) return;
 
-    // Navigate to MainNavigationScreen (supports guest exploration & authenticated users)
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const MainNavigationScreen()),
-    );
+    final hasSession = StorageService.hasValidSession();
+
+    if (hasSession) {
+      // Remembered session: Route directly to role-specific dashboard
+      final role = StorageService.getUserRole();
+      Widget target;
+      if (role == 'OWNER') {
+        target = const OwnerNavigationScreen();
+      } else if (role == 'ADMIN') {
+        target = const AdminNavigationScreen();
+      } else {
+        target = const MainNavigationScreen();
+      }
+
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => target),
+      );
+    } else {
+      // First time open or logged out: Show 3-role login window
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+      );
+    }
   }
 
   @override
