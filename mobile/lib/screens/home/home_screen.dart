@@ -38,6 +38,8 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadDataInstantly();
   }
 
+  void _loadData() => _loadDataInstantly();
+
   void _loadDataInstantly() {
     _campusName = StorageService.getCampusName();
     final verifiedMaps = AppRepository.getVerifiedBusinesses();

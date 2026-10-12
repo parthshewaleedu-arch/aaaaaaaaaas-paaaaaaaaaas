@@ -44,7 +44,7 @@ jobs:
           cat ../analyze.txt
 
       - name: Report Diagnostics to Commit Comment
-        if: always()
+        if: failure()
         uses: actions/github-script@v7
         with:
           script: |

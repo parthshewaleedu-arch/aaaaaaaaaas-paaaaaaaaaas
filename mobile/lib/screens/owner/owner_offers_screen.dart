@@ -88,15 +88,15 @@ class _OwnerOffersScreenState extends State<OwnerOffersScreen> {
 
                 Wrap(
                   spacing: 8,
-                  children: [10, 20, 50, 100].map((num) {
-                    final isSel = studentQuota == num;
+                  children: [10, 20, 50, 100].map((limit) {
+                    final isSel = studentQuota == limit;
                     return ChoiceChip(
-                      label: Text('First $num students', style: const TextStyle(fontSize: 12)),
+                      label: Text('First $limit students', style: const TextStyle(fontSize: 12)),
                       selected: isSel,
                       selectedColor: AppTheme.primary,
                       labelStyle: TextStyle(color: isSel ? Colors.white : AppTheme.textPrimary, fontWeight: FontWeight.bold),
                       onSelected: (val) {
-                        if (val) setDialogState(() => studentQuota = num);
+                        if (val) setDialogState(() => studentQuota = limit);
                       },
                     );
                   }).toList(),
