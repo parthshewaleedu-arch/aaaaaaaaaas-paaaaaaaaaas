@@ -37,7 +37,14 @@ jobs:
 
       - name: Analyze Flutter Code
         working-directory: ./mobile
-        run: flutter analyze
+        run: |
+          flutter analyze > ../analyze.txt 2>&1 || true
+          echo "### Flutter Analyze Output" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat ../analyze.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat ../analyze.txt
+          exit $(grep -c "error •" ../analyze.txt)
 
       - name: Build Release APK
         working-directory: ./mobile
