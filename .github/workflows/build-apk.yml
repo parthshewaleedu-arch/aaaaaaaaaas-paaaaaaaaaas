@@ -35,9 +35,22 @@ jobs:
         working-directory: ./mobile
         run: flutter pub get
 
+      - name: Analyze Flutter Code
+        working-directory: ./mobile
+        run: flutter analyze
+
       - name: Build Release APK
         working-directory: ./mobile
-        run: flutter build apk --release
+        run: |
+          flutter build apk --release 2>&1 | tee build.log
+
+      - name: Upload Build Log On Failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Flutter-Build-Log
+          path: mobile/build.log
+          retention-days: 7
 
       - name: Upload Downloadable APK Artifact
         uses: actions/upload-artifact@v4
